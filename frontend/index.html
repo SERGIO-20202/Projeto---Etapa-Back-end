@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>NetAdmin RT - Teste</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { margin: 5px; }
+    .hidden { display: none; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: left; }
+  </style>
+</head>
+<body>
+
+<h1>NetAdmin RT - Teste Frontend</h1>
+
+<div id="auth">
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email"><br>
+  <input type="password" id="loginSenha" placeholder="Senha"><br>
+  <button onclick="login()">Login</button>
+
+  <h2>Registrar</h2>
+  <input type="text" id="regNome" placeholder="Nome"><br>
+  <input type="email" id="regEmail" placeholder="Email"><br>
+  <input type="password" id="regSenha" placeholder="Senha"><br>
+  <button onclick="register()">Registrar</button>
+</div>
+
+<div id="vlansDiv" class="hidden">
+  <h2>VLANs</h2>
+  <button onclick="logout()">Logout</button>
+  <h3>Criar VLAN</h3>
+  <input type="text" id="vlanNome" placeholder="Nome">
+  <input type="text" id="vlanStatus" placeholder="Status">
+  <input type="text" id="vlanDesc" placeholder="Descrição">
+  <button onclick="criarVlan()">Criar</button>
+
+  <h3>Lista de VLANs</h3>
+  <table id="vlanTable">
+    <thead>
+      <tr><th>ID</th><th>Nome</th><th>Status</th><th>Descrição</th><th>Tráfego</th><th>Ações</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+let token = localStorage.getItem('token');
+
+function setAuth(tokenValue){
+  token = tokenValue;
+  localStorage.setItem('token', token);
+  document.getElementById('auth').classList.add('hidden');
+  document.getElementById('vlansDiv').classList.remove('hidden');
+  listarVlans();
+}
+
+async function login(){
+  const email = document.getElementById('loginEmail').value;
+  const senha = document.getElementById('loginSenha').value;
+  const res = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, senha })
+  });
+  const data = await res.json();
+  if(data.token) setAuth(data.token);
+  else alert(data.error || 'Erro no login');
+}
+
+async function register(){
+  const nome = document.getElementById('regNome').value;
+  const email = document.getElementById('regEmail').value;
+  const senha = document.getElementById('regSenha').value;
+  const res = await fetch(`${API}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, email, senha })
+  });
+  const data = await res.json();
+  if(data.message) alert('Registrado com sucesso! Faça login.');
+  else alert(data.error || 'Erro ao registrar');
+}
+
+function logout(){
+  localStorage.removeItem('token');
+  token = null;
+  document.getElementById('auth').classList.remove('hidden');
+  document.getElementById('vlansDiv').classList.add('hidden');
+}
+
+async function listarVlans(){
+  const res = await fetch(`${API}/vlans`, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const vlans = await res.json();
+  const tbody = document.querySelector('#vlanTable tbody');
+  tbody.innerHTML = '';
+  vlans.forEach(v => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${v.id}</td>
+      <td><input value="${v.nome}" id="nome${v.id}"></td>
+      <td><input value="${v.status}" id="status${v.id}"></td>
+      <td><input value="${v.descricao || ''}" id="desc${v.id}"></td>
+      <td>${v.trafego}</td>
+      <td>
+        <button onclick="atualizarVlan(${v.id})">Atualizar</button>
+        <button onclick="deletarVlan(${v.id})">Deletar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function criarVlan(){
+  const nome = document.getElementById('vlanNome').value;
+  const status = document.getElementById('vlanStatus').value;
+  const descricao = document.getElementById('vlanDesc').value;
+  const res = await fetch(`${API}/vlans`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ nome, status, descricao })
+  });
+  const data = await res.json();
+  if(data.id) listarVlans();
+  else alert(data.error || 'Erro ao criar VLAN');
+}
+
+async function atualizarVlan(id){
+  const nome = document.getElementById(`nome${id}`).value;
+  const status = document.getElementById(`status${id}`).value;
+  const descricao = document.getElementById(`desc${id}`).value;
+  const res = await fetch(`${API}/vlans/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ nome, status, descricao })
+  });
+  const data = await res.json();
+  if(data.changes) listarVlans();
+  else alert(data.error || 'Erro ao atualizar VLAN');
+}
+
+async function deletarVlan(id){
+  const res = await fetch(`${API}/vlans/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  if(data.changes) listarVlans();
+  else alert(data.error || 'Erro ao deletar VLAN');
+}
+
+// auto-login se token existe
+if(token) setAuth(token);
+</script>
+
+</body>
+</html>

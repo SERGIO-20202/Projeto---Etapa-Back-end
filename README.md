@@ -2,7 +2,10 @@
 
 ## Como usar
 
-1. Copie `.env.example` para `.env` e ajuste se necessário.
+1. Entre na past de backend.
+```bash
+cd ./netadminrt-backend-updated
+```
 2. Instale dependências:
    ```bash
    npm install
@@ -11,6 +14,26 @@
    ```bash
    npm start
    ```
+
+4. abra outro terminal e entre na pasta de frontend:
+```bash
+cd ./frontend
+```
+
+5. Instale dependências:
+   ```bash
+   npm install
+   ```
+6. Inicie (sobe o servidor frontend):
+   ```bash
+   npm start
+   ```
+
+7. abra a url no navegador:
+```bash
+http://localhost:5000
+```
+
 
 Usuário admin padrão (criado se não existir):
 - email: admin@netadmin.com

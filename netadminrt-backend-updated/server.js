@@ -80,12 +80,15 @@ app.use('/api/vlans', vlanRouter);
 app.get('/api/metrics', autenticarToken, async (req, res) => {
   const vlanCountRow = await db.get('SELECT COUNT(*) AS total FROM vlans');
   const userCountRow = await db.get('SELECT COUNT(*) AS total FROM usuarios');
+
+  const trafficRow = await db.get('SELECT SUM(trafego) AS totalTraffic FROM vlans');
+
   const vlanCount = vlanCountRow?.total || 0;
   const userCount = userCountRow?.total || 0;
-  const traffic = Math.floor(Math.random()*1000); // Mbps simulado
+  const traffic = trafficRow?.totalTraffic || 0; // soma do tráfego
+
   res.json({ vlanCount, userCount, traffic });
 });
-
 // criar logs dir se não existir
 const logsDir = path.join(__dirname, 'logs');
 if(!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });

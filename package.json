@@ -1,0 +1,19 @@
+{
+  "name": "netadminrt-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "init-db": "node netadminrt-backend-updated/models/init.js",
+    "start": "node netadminrt-backend-updated/server.js && node netadminrt-backend-updated/models/init.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.6",
+    "sqlite": "^4.1.2",
+    "ws": "^8.13.0"
+  }
+}
