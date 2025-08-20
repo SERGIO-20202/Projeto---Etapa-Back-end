@@ -8,12 +8,16 @@
     body { padding: 30px; background-color: #f8f9fa; }
     .card { margin-bottom: 20px; }
     .hidden { display: none; }
+    #alertBox { position: fixed; top: 20px; right: 20px; z-index: 1050; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <h1 class="mb-4 text-center">📡 NetAdmin RT</h1>
+
+  <!-- Área de mensagens -->
+  <div id="alertBox"></div>
 
   <!-- Login / Registro -->
   <div id="auth">
@@ -107,12 +111,32 @@
 const API = 'http://localhost:3000/api';
 let token = localStorage.getItem('token');
 
+function showAlert(message, type="info") {
+  const alertBox = document.getElementById("alertBox");
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show shadow" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+  alertBox.appendChild(wrapper);
+
+  // Fecha sozinho depois de 4s
+  setTimeout(() => {
+    wrapper.querySelector(".alert").classList.remove("show");
+    wrapper.querySelector(".alert").classList.add("fade");
+    setTimeout(() => wrapper.remove(), 500);
+  }, 4000);
+}
+
 function setAuth(tokenValue){
   token = tokenValue;
   localStorage.setItem('token', token);
   document.getElementById('auth').classList.add('hidden');
   document.getElementById('vlansDiv').classList.remove('hidden');
   listarVlans();
+  showAlert("Login realizado com sucesso!", "success");
 }
 
 async function login(){
@@ -125,7 +149,7 @@ async function login(){
   });
   const data = await res.json();
   if(data.token) setAuth(data.token);
-  else alert(data.error || 'Erro no login');
+  else showAlert(data.error || 'Erro no login', "danger");
 }
 
 async function register(){
@@ -138,8 +162,8 @@ async function register(){
     body: JSON.stringify({ nome, email, senha })
   });
   const data = await res.json();
-  if(data.message) alert('Registrado com sucesso! Faça login.');
-  else alert(data.error || 'Erro ao registrar');
+  if(data.message) showAlert("Registrado com sucesso! Faça login.", "success");
+  else showAlert(data.error || 'Erro ao registrar', "danger");
 }
 
 function logout(){
@@ -147,6 +171,7 @@ function logout(){
   token = null;
   document.getElementById('auth').classList.remove('hidden');
   document.getElementById('vlansDiv').classList.add('hidden');
+  showAlert("Logout realizado!", "secondary");
 }
 
 async function listarVlans(){
@@ -183,8 +208,12 @@ async function criarVlan(){
     body: JSON.stringify({ nome, status, descricao })
   });
   const data = await res.json();
-  if(data.id) listarVlans();
-  else alert(data.error || 'Erro ao criar VLAN');
+  if(data.id) {
+    listarVlans();
+    showAlert("VLAN criada com sucesso!", "success");
+  } else {
+    showAlert(data.error || 'Erro ao criar VLAN', "danger");
+  }
 }
 
 async function atualizarVlan(id){
@@ -197,8 +226,12 @@ async function atualizarVlan(id){
     body: JSON.stringify({ nome, status, descricao })
   });
   const data = await res.json();
-  if(data.changes) listarVlans();
-  else alert(data.error || 'Erro ao atualizar VLAN');
+  if(data.changes) {
+    listarVlans();
+    showAlert("VLAN atualizada com sucesso!", "info");
+  } else {
+    showAlert(data.error || 'Erro ao atualizar VLAN', "danger");
+  }
 }
 
 async function deletarVlan(id){
@@ -207,8 +240,12 @@ async function deletarVlan(id){
     headers: { 'Authorization': 'Bearer ' + token }
   });
   const data = await res.json();
-  if(data.changes) listarVlans();
-  else alert(data.error || 'Erro ao deletar VLAN');
+  if(data.changes) {
+    listarVlans();
+    showAlert("VLAN deletada!", "warning");
+  } else {
+    showAlert(data.error || 'Erro ao deletar VLAN', "danger");
+  }
 }
 
 if(token) setAuth(token);
@@ -217,4 +254,5 @@ if(token) setAuth(token);
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
 
