@@ -7,23 +7,20 @@ import path from 'path';
 const DB_FILE = './db/database.sqlite';
 const LOG_FILE = path.join('logs', 'atividades.log');
 
-// cria diretório de logs se não existir
 if (!fs.existsSync('logs')) fs.mkdirSync('logs', { recursive: true });
+if (!fs.existsSync('db')) fs.mkdirSync('db', { recursive: true });
 
-// helper log
 function registrarLog(msg){
   const linha = `[${new Date().toISOString()}] ${msg}\n`;
   fs.appendFileSync(LOG_FILE, linha);
 }
 
-// inicializa DB
 async function initDb() {
   const db = await open({
     filename: DB_FILE,
     driver: sqlite3.Database
   });
 
-  // criar tabelas
   await db.exec(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,11 +42,11 @@ async function initDb() {
     );
   `);
 
-  // cria usuário admin padrão se não existir
+  // criar usuário admin padrão
   const adminEmail = 'admin@teste.com';
   const existingAdmin = await db.get('SELECT * FROM usuarios WHERE email = ?', adminEmail);
   if (!existingAdmin) {
-    const hash = await bcrypt.hash('123456', 10); // senha padrão
+    const hash = await bcrypt.hash('123456', 10);
     await db.run('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', 'Admin', adminEmail, hash);
     registrarLog('Usuário administrador criado: admin@teste.com / 123456');
     console.log('Usuário administrador criado: admin@teste.com / 123456');
@@ -64,4 +61,3 @@ initDb().catch(err => {
   console.error('Erro ao inicializar DB:', err);
   process.exit(1);
 });
-
