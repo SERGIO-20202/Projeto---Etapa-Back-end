@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Backend do projeto NetAdmin RT",
   "type": "module",
-  "main": "netadminrt-backend-updated/server.js",
+  "main": "server.js",
   "scripts": {
-    "init-db": "node netadminrt-backend-updated/models/init.js",
-    "start": "npm run init-db && node netadminrt-backend-updated/server.js",
-    "dev": "nodemon netadminrt-backend-updated/server.js"
+    "init-db": "node models/init.js",
+    "start": "npm run init-db && node server.js",
+    "dev": "nodemon server.js"
   },
   "author": "Sérgio Henrique da Silva",
   "license": "MIT",
@@ -25,4 +25,5 @@
     "nodemon": "^3.0.2"
   }
 }
+
 
