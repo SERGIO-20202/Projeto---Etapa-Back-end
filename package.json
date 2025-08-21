@@ -1,19 +1,28 @@
 {
   "name": "netadminrt-backend",
   "version": "1.0.0",
+  "description": "Backend do projeto NetAdmin RT",
   "type": "module",
+  "main": "netadminrt-backend-updated/server.js",
   "scripts": {
-  "init-db": "node netadminrt-backend-updated/models/init.js",
-  "start": "npm run init-db && node netadminrt-backend-updated/server.js"
-},
+    "init-db": "node netadminrt-backend-updated/models/init.js",
+    "start": "npm run init-db && node netadminrt-backend-updated/server.js",
+    "dev": "nodemon netadminrt-backend-updated/server.js"
+  },
+  "author": "Sérgio Henrique da Silva",
+  "license": "MIT",
   "dependencies": {
-    "bcrypt": "^5.1.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "sqlite3": "^5.1.6",
+    "jsonwebtoken": "^9.0.1",
     "sqlite": "^4.1.2",
-    "ws": "^8.13.0"
+    "sqlite3": "^5.1.6",
+    "ws": "^8.15.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
+
