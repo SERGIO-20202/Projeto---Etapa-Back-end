@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "init-db": "node netadminrt-backend-updated/models/init.js",
-    "start": "node netadminrt-backend-updated/server.js && node netadminrt-backend-updated/models/init.js"
-  },
+  "init-db": "node netadminrt-backend-updated/models/init.js",
+  "start": "npm run init-db && node netadminrt-backend-updated/server.js"
+},
   "dependencies": {
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
