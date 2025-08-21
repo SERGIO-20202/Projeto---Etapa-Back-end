@@ -36,8 +36,8 @@ http://localhost:5000
 
 
 Usuário admin padrão (criado se não existir):
-- email: admin@netadmin.com
-- senha: admin123
+- email: admin@teste.com
+- senha: 123456
 
 ## Endpoints principais
 - POST /api/auth/register
