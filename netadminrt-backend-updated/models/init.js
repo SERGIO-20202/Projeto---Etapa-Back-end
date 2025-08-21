@@ -1,17 +1,29 @@
-import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import sqlite3 from 'sqlite3';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
-import bcrypt from 'bcrypt';
 import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, '.', process.env.DB_FILE || 'db/database.sqlite');
 
-async function init(){
-  const dbDir = path.dirname(DB_FILE);
-  if(!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
-  const db = await open({ filename: DB_FILE, driver: sqlite3.Database });
+const DB_FILE = './db/database.sqlite';
+const LOG_FILE = path.join('logs', 'atividades.log');
+
+// cria diretório de logs se não existir
+if (!fs.existsSync('logs')) fs.mkdirSync('logs', { recursive: true });
+
+// helper log
+function registrarLog(msg){
+  const linha = `[${new Date().toISOString()}] ${msg}\n`;
+  fs.appendFileSync(LOG_FILE, linha);
+}
+
+// inicializa DB
+async function initDb() {
+  const db = await open({
+    filename: DB_FILE,
+    driver: sqlite3.Database
+  });
+
+  // criar tabelas
   await db.exec(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,6 +32,7 @@ async function init(){
       senha TEXT NOT NULL
     );
   `);
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS vlans (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,16 +44,24 @@ async function init(){
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     );
   `);
-  // criar admin se não existir
-  const adminEmail = 'admin@netadmin.com';
-  const row = await db.get('SELECT * FROM usuarios WHERE email = ?', [adminEmail]);
-  if(!row){
-    const senha = 'admin123';
-    const hash = await bcrypt.hash(senha, 10);
-    await db.run('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', ['Admin', adminEmail, hash]);
-    console.log('Usuário admin criado:', adminEmail);
+
+  // cria usuário admin padrão se não existir
+  const adminEmail = 'admin@teste.com';
+  const existingAdmin = await db.get('SELECT * FROM usuarios WHERE email = ?', adminEmail);
+  if (!existingAdmin) {
+    const hash = await bcrypt.hash('123456', 10); // senha padrão
+    await db.run('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', 'Admin', adminEmail, hash);
+    registrarLog('Usuário administrador criado: admin@teste.com / 123456');
+    console.log('Usuário administrador criado: admin@teste.com / 123456');
+  } else {
+    console.log('Usuário administrador já existe');
   }
+
   await db.close();
 }
 
-init().catch(err => { console.error(err); process.exit(1); });
+initDb().catch(err => {
+  console.error('Erro ao inicializar DB:', err);
+  process.exit(1);
+});
+
