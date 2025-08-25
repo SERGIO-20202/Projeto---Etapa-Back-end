@@ -1,30 +1,68 @@
 import express from 'express';
-import { db } from '../server.js';
-import { autenticarToken } from '../server.js'; // se tiver middleware no server
+import { db, registrarLog } from '../server.js';
 
 const router = express.Router();
 
-// listar VLANs
-router.get('/', autenticarToken, async (req, res) => {
-  try {
-    const vlans = await db.all('SELECT * FROM vlans');
-    res.json(vlans);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar VLANs' });
+// Criar VLAN
+router.post('/', (req, res) => {
+  const { vlan_id, nome, status } = req.body;
+
+  if (!vlan_id || !nome || !status) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
   }
+
+  db.run(
+    'INSERT INTO vlans (vlan_id, nome, status) VALUES (?, ?, ?)',
+    [vlan_id, nome, status],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      registrarLog(`VLAN ${nome} criada`);
+      res.status(201).json({ id: this.lastID, vlan_id, nome, status });
+    }
+  );
 });
 
-// criar VLAN
-router.post('/', autenticarToken, async (req, res) => {
-  try {
-    const { nome, status, descricao } = req.body;
-    await db.run('INSERT INTO vlans (nome, status, descricao) VALUES (?, ?, ?)', nome, status, descricao);
-    res.json({ message: 'VLAN criada com sucesso!' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao criar VLAN' });
-  }
+// Listar VLANs
+router.get('/', (req, res) => {
+  db.all('SELECT * FROM vlans', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
+// Atualizar VLAN
+router.put('/:id', (req, res) => {
+  const { nome, status } = req.body;
+  const { id } = req.params;
+
+  db.run(
+    'UPDATE vlans SET nome = ?, status = ? WHERE id = ?',
+    [nome, status, id],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      registrarLog(`VLAN ${id} atualizada`);
+      res.json({ updated: this.changes });
+    }
+  );
+});
+
+// Deletar VLAN
+router.delete('/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.run('DELETE FROM vlans WHERE id = ?', [id], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    registrarLog(`VLAN ${id} removida`);
+    res.json({ deleted: this.changes });
+  });
 });
 
 export default router;
