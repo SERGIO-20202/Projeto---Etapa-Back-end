@@ -1,17 +1,22 @@
+// backend/db.js
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
-import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const DB_FILE = process.env.DB_FILE || './db/database.sqlite';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// garante que a pasta db/ existe
-fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
+const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'db', 'database.sqlite');
 
-const dbPromise = open({
-  filename: DB_FILE,
-  driver: sqlite3.Database
-}).then(async (db) => {
+// função para inicializar
+async function initDb() {
+  const db = await open({
+    filename: DB_FILE,
+    driver: sqlite3.Database
+  });
+
+  // cria tabelas se não existirem
   await db.exec(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,7 +25,22 @@ const dbPromise = open({
       senha TEXT NOT NULL
     );
   `);
-  return db;
-});
 
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS vlans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      status TEXT NOT NULL,
+      descricao TEXT,
+      trafego INTEGER DEFAULT 0,
+      usuario_id INTEGER,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    );
+  `);
+
+  return db;
+}
+
+// Exporta como Promise para ser usado com await em outros módulos
+const dbPromise = initDb();
 export default dbPromise;
