@@ -73,6 +73,7 @@ function autenticarToken(req, res, next){
 // rotas auth
 import authRouter from './routes/auth.js';
 import vlanRouter from './routes/vlans.js';
+
 app.use('/api/auth', authRouter);
 app.use('/api/vlans', vlanRouter);
 
