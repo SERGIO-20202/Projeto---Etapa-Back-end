@@ -15,7 +15,7 @@ O projeto usa:
 
 ```bash
 # Clone o repositório
-git clone https://github.com/SEU_USUARIO/Projeto---Etapa-Back-end.git
+git clone (https://github.com/SERGIO-20202/Projeto---Etapa-Back-end.git)
 cd Projeto---Etapa-Back-end/backend
 
 # Instale as dependências
