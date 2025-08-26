@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { db, registrarLog } from '../server.js';
+import dbPromise from '../db.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'troca_isto_em_producao';
@@ -15,22 +15,20 @@ router.post('/register', async (req, res) => {
     }
 
     const hash = await bcrypt.hash(senha, 10);
+    const db = await dbPromise;
 
-    db.run(
+    const result = await db.run(
       'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
-      [nome, email, hash],
-      function (err) {
-        if (err) {
-          return res.status(400).json({ error: err.message });
-        }
-        registrarLog(`Usuário ${email} registrado`);
-        res.json({ id: this.lastID, message: 'registrado' });
-      }
+      [nome, email, hash]
     );
+
+    res.json({ id: result.lastID, message: 'registrado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    const msg = err?.message?.includes('UNIQUE')
+      ? 'Email já cadastrado'
+      : err.message;
+    res.status(400).json({ error: msg });
   }
 });
-
 
 export default router;
