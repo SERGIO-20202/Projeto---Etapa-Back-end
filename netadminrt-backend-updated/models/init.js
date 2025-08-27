@@ -1,63 +1,42 @@
-import { open } from 'sqlite';
+// models/init.js
 import sqlite3 from 'sqlite3';
-import bcrypt from 'bcryptjs';
-import fs from 'fs';
-import path from 'path';
+import { open } from 'sqlite';
 
-const DB_FILE = './db/database.sqlite';
-const LOG_FILE = path.join('logs', 'atividades.log');
-
-if (!fs.existsSync('logs')) fs.mkdirSync('logs', { recursive: true });
-if (!fs.existsSync('db')) fs.mkdirSync('db', { recursive: true });
-
-function registrarLog(msg){
-  const linha = `[${new Date().toISOString()}] ${msg}\n`;
-  fs.appendFileSync(LOG_FILE, linha);
-}
-
-async function initDb() {
+// Inicializa e retorna o banco
+export async function initDB() {
+  // Abre conexão com o SQLite
   const db = await open({
-    filename: DB_FILE,
+    filename: './database.db', // arquivo do banco
     driver: sqlite3.Database
   });
 
+  // Cria tabela de usuários
   await db.exec(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nome TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
-      senha TEXT NOT NULL
+      senha TEXT NOT NULL,
+      criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
+  // Cria tabela de logs
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS vlans (
+    CREATE TABLE IF NOT EXISTS logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      status TEXT NOT NULL,
-      descricao TEXT,
-      trafego INTEGER,
+      acao TEXT NOT NULL,
       usuario_id INTEGER,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     );
   `);
 
-  // criar usuário admin padrão
-  const adminEmail = 'admin@teste.com';
-  const existingAdmin = await db.get('SELECT * FROM usuarios WHERE email = ?', adminEmail);
-  if (!existingAdmin) {
-    const hash = await bcrypt.hash('123456', 10);
-    await db.run('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', 'Admin', adminEmail, hash);
-    registrarLog('Usuário administrador criado: admin@teste.com / 123456');
-    console.log('Usuário administrador criado: admin@teste.com / 123456');
-  } else {
-    console.log('Usuário administrador já existe');
-  }
-
-  await db.close();
+  console.log('Banco SQLite inicializado com sucesso!');
+  return db;
 }
 
-initDb().catch(err => {
-  console.error('Erro ao inicializar DB:', err);
-  process.exit(1);
-});
+// Teste rápido: se rodar diretamente, inicializa o banco
+if (import.meta.url === `file://${process.argv[1]}`) {
+  initDB();
+}
