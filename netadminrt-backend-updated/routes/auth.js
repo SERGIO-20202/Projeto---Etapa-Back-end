@@ -2,6 +2,8 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dbPromise from '../db.js';
+import db from '../models/init.js';
+import { registrarLog } from '../server.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'troca_isto_em_producao';
